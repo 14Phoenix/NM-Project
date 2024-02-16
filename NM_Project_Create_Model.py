@@ -1,0 +1,130 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+import pandas as pd
+
+# Load data
+data = pd.read_csv("D:\\NM_Data\\archive\\analog_clocks\\label.csv")
+
+output_data_numpy = data.iloc[:, 0:2].to_numpy()
+
+hour_num_of_samples = [0 for i in range(12)]
+minute_num_of_samples = [0 for i in range(60)]
+
+for i in range(len(hour_num_of_samples)):
+    hour_num_of_samples[i] = (output_data_numpy[output_data_numpy[:, 0] == i]).shape[0]
+
+for i in range(len(minute_num_of_samples)):
+    minute_num_of_samples[i] = (output_data_numpy[output_data_numpy[:, 1] == i]).shape[0]
+
+# Histogram hour
+plt.figure()
+plt.bar([i for i in range(12)], hour_num_of_samples, tick_label=[i for i in range(12)])
+plt.show()
+
+# Histogram minute
+plt.figure(figsize=(15, 3))
+plt.bar([i for i in range(60)], minute_num_of_samples, tick_label=[i for i in range(60)])
+plt.show()
+
+# print(hour_num_of_samples)
+# print(minute_num_of_samples)
+
+# print(sum(hour_num_of_samples))
+# print(sum(minute_num_of_samples))
+
+# Create dataset
+import os
+import tensorflow as tf
+
+img_dir_path = "D:\\NM_Data\\archive\\analog_clocks\\images"
+img_size = (300, 300)
+
+files = next(os.walk(img_dir_path))[2]
+
+from sklearn.model_selection import train_test_split
+
+input_train, input_test, output_train, output_test = train_test_split(files,
+                                                                      output_data_numpy,
+                                                                      train_size=0.8,
+                                                                      shuffle=True,
+                                                                      random_state=14)
+
+train_dataset = tf.data.Dataset.from_tensor_slices((input_train, output_train))
+test_dataset = tf.data.Dataset.from_tensor_slices((input_test, output_test))
+
+def read_image(image_path, lab):
+    image = tf.io.read_file(img_dir_path + "\\" + image_path)
+    image = tf.image.decode_jpeg(image, channels=3)
+    return image, lab
+
+train_dataset = train_dataset.map(read_image).batch(64)
+test_dataset = test_dataset.map(read_image).batch(64)
+
+# N = 10
+# plt.figure()
+# for img, lab in dataset.take(1):
+#     for i in range(N):
+#         plt.subplot(2, int(N/2), i + 1)
+#         plt.imshow(img[i].numpy().astype("uint8"))
+#         plt.axis("off")
+# plt.show()
+
+# Create a model
+from keras import Sequential
+from keras import layers
+
+model = Sequential([
+    layers.RandomContrast(0.2, input_shape=(300, 300, 3)),
+    layers.RandomBrightness(0.2),
+    layers.Conv2D(16, kernel_size=(3, 3), padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Conv2D(32, kernel_size=(3, 3), padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Conv2D(64, kernel_size=(3, 3), padding='same', activation='relu'),
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(2)
+])
+
+model.summary()
+
+# Compile and train the model
+from keras.losses import MeanSquaredError
+from keras.callbacks import EarlyStopping
+
+model.compile(optimizer='adam',
+              loss=MeanSquaredError(),
+              metrics=['accuracy'])
+
+stop_early = EarlyStopping(monitor='val_accuracy', patience=3, restore_best_weights=True)
+history = model.fit(train_dataset,
+                    epochs=20,
+                    validation_data=test_dataset,
+                    callbacks=[stop_early],
+                    verbose=1)
+
+acc = history.history['accuracy']
+val_acc = history.history['val_accuracy']
+
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+
+print('Train accuracy: ', acc)
+print('Validation accuracy: ', val_acc)
+
+print('Train loss: ', loss)
+print('Validation loss: ', val_loss)
+
+plt.figure()
+plt.subplot(121)
+plt.plot(acc)
+plt.plot(val_acc)
+plt.title('Accuracy')
+plt.subplot(122)
+plt.plot(loss)
+plt.plot(val_loss)
+plt.title('Loss')
+plt.show()
+
+model.save('NM_Project.h5')
