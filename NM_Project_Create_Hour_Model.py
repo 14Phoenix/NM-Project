@@ -21,12 +21,7 @@ from sklearn.model_selection import train_test_split
 from keras.utils import to_categorical
 
 output_data_numpy_hour = output_data_numpy[:, 0]
-# output_data_numpy_minute = output_data_numpy[:, 1]
-
 output_data_numpy_hour_OHE = to_categorical(output_data_numpy_hour)
-# output_data_numpy_minute_OHE = to_categorical(output_data_numpy_minute)
-
-# output_data_numpy_OHE = np.concatenate((output_data_numpy_hour_OHE, output_data_numpy_minute_OHE), axis=1)
 
 input_train_hour, input_test_hour, output_train_hour_OHE, output_test_hour_OHE = train_test_split(files,
                                                                                                   output_data_numpy_hour_OHE,
@@ -105,4 +100,4 @@ plt.plot(val_loss)
 plt.title('Loss')
 plt.show()
 
-model.save('NM_Project_hour_OHE.h5')
+model.save('NM_Project_Hour_OHE.h5')
