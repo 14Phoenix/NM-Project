@@ -53,7 +53,7 @@ model = Sequential([
     layers.Conv2D(32, kernel_size=(3, 3), padding='same', activation='relu'),
     layers.MaxPooling2D(),
     layers.Conv2D(64, kernel_size=(3, 3), padding='same', activation='relu'),
-    layers.MaxPooling2D(),
+    layers.MaxPooling2D((3, 3)),
     layers.Flatten(),
     layers.Dropout(0.3),
     layers.Dense(128, activation='relu', kernel_regularizer=l2(0.001)),
@@ -72,7 +72,7 @@ model.compile(optimizer='adam',
 
 stop_early = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 history = model.fit(train_dataset,
-                    epochs=50,
+                    epochs=150,
                     validation_data=test_dataset,
                     callbacks=[stop_early],
                     verbose=1)
