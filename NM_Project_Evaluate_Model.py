@@ -56,10 +56,10 @@ train_dataset_minute = train_dataset_minute.map(read_image).batch(64)
 test_dataset_minute = test_dataset_minute.map(read_image).batch(64)
 
 # Load models
-model_hour = tf.keras.models.load_model("NM_Project_hour_OHE_2.h5")
+model_hour = tf.keras.models.load_model("NM_Project_Hour_OHE.h5")
 model_hour.summary()
 
-model_minute = tf.keras.models.load_model("NM_Project_Minute_OHE_2.h5")
+model_minute = tf.keras.models.load_model("NM_Project_Minute_OHE.h5")
 model_minute.summary()
 
 # Predict train and test data
